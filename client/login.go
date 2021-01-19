@@ -5,10 +5,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"net"
+	"time"
 
 	"chatroom/common/message"
-
-	"cloud.google.com/go/logging"
 )
 
 //写一个函数，完成登录
@@ -64,7 +63,19 @@ func Login(userId int, userPwd string) (err error) {
 		fmt.Println("conn.Write fail! err=", err)
 		return
 	}
-	fmt.Printf("客户端，发送消息的长度OK 长度=%d, 内容=%s", len(data), string(data))
+	//fmt.Printf("客户端，发送消息的长度OK 长度=%d, 内容=%s", len(data), string(data))
 
-	return nil
+	//7.2 发送消息本身
+	_, err = conn.Write(data)
+	if err != nil {
+		fmt.Println("conn.Write(data) fail! err=", err)
+		return
+	}
+
+	//休眠20秒
+	time.Sleep(time.Second * 20)
+	fmt.Println("休眠20秒")
+	//这里还需要处理服务器端返回的消息
+
+	return
 }

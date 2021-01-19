@@ -1,8 +1,13 @@
 package main
 
 import (
+	"encoding/binary"
+	"encoding/json"
 	"fmt"
+	"io"
 	"net"
+
+	"chatroom/common/message"
 )
 
 func main() {
@@ -24,11 +29,39 @@ func main() {
 		if err != nil {
 			fmt.Println("listen.Accept err=", err)
 		}
-
-		//一旦链接成功，则启动一个协程和客户端保持通讯
-
+		//一旦连接成功，则启动一个协程和客户端保持通讯
 		go process(conn)
 	}
+}
+
+func readPkg(conn net.Conn) (mes message.Message, err error) {
+	buf := make([]byte, 4096)
+	fmt.Println("读取客户端发送的数据....")
+	_, err = conn.Read(buf[:4])
+	if err != nil {
+		//err = errors.New("read pkg header error")
+		return
+	}
+	//fmt.Println("读到的buf=", buf[0:4])
+	//根据读到的长度,转换成uint32类型
+	var pkgLen uint32 //表示实际读取到的内容的长度
+	pkgLen = binary.BigEndian.Uint32(buf[0:4])
+
+	//根据pkgLen读取消息内容
+	n, err := conn.Read(buf[:pkgLen]) //从conn套接字读取pkgLen的字节到buf中
+	if uint32(n) != pkgLen || err != nil {
+		//err = errors.New("read pkg body error")
+		return
+	}
+
+	//把pkgLen,反序列化成-> message.Message
+	err = json.Unmarshal(buf[:pkgLen], &mes)
+	if err != nil {
+		fmt.Println("json.Unmarshal err=", err)
+		return
+	}
+
+	return
 }
 
 //处理和客户端的通讯
@@ -38,14 +71,17 @@ func process(conn net.Conn) {
 
 	//循环读取客户端发送的信息
 	for {
-		buf := make([]byte, 4096)
-		fmt.Println("读取客户端发送的数据....")
-
-		n, err := conn.Read(buf[:4])
-		if n != 4 || err != nil {
-			fmt.Println("conn.Read err=", err)
-			return
+		//读取包中的内容
+		msg, err := readPkg(conn)
+		if err != nil {
+			if err == io.EOF {
+				fmt.Println("客户端退出,服务器也正常退出。。。")
+				return
+			} else {
+				fmt.Println("readPkg err=", err)
+				return
+			}
 		}
-		fmt.Println("读到的buf=", buf[0:4])
+		fmt.Println("mes=", msg)
 	}
 }
