@@ -1,13 +1,11 @@
 package main
 
 import (
+	"chatroom/common/message"
 	"encoding/binary"
 	"encoding/json"
 	"fmt"
 	"net"
-	"time"
-
-	"chatroom/common/message"
 )
 
 //写一个函数，完成登录
@@ -73,9 +71,23 @@ func Login(userId int, userPwd string) (err error) {
 	}
 
 	//休眠20秒
-	time.Sleep(time.Second * 20)
-	fmt.Println("休眠20秒")
+	//time.Sleep(time.Second * 20)
+	//fmt.Println("休眠20秒")
+
 	//这里还需要处理服务器端返回的消息
+	mes, err = readPkg(conn) //mes就是
+	if err != nil {
+		fmt.Println("readPkg(conn) err=",err)
+		return
+	}
+	//将mes的data部分反序列化成 LoginResMes
+	var loginResMes message.LoginResMes
+	err = json.Unmarshal([]byte(mes.Data),&loginResMes)
+	if loginResMes.Code == 200 {
+		fmt.Println("登录成功")
+	}else if loginResMes.Code == 500 {
+		fmt.Println(loginResMes.Error)
+	}
 
 	return
 }

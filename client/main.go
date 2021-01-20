@@ -44,12 +44,12 @@ func main()  {
 		fmt.Scanf("%d\n",&userId)
 		fmt.Println("请输入用户的密码")
 		fmt.Scanf("%s\n",&userPwd)
-		err := Login(userId,userPwd)
-		if err != nil {
-			fmt.Println("登录失败")
-		}else {
-			fmt.Println("登录成功")
-		}
+		Login(userId,userPwd)
+		//if err != nil {
+		//	fmt.Println("登录失败")
+		//}else {
+		//	fmt.Println("登录成功")
+		//}
 	}else if key == 2{
 		fmt.Println("进行用户注册")
 	}
