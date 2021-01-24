@@ -2,6 +2,7 @@ package process2
 
 import (
 	"chatroom/common/message"
+	"chatroom/server/model"
 	"chatroom/server/utils"
 	"encoding/json"
 	"fmt"
@@ -27,16 +28,35 @@ func (this *UserProcess)ServerProcessLogin(mes *message.Message) (err error)  {
 	var resMes message.Message
 	resMes.Type = message.LoginResMesType
 
-	//2、再声明一个LoginResMes
+	//2、再声明一个LoginResMes,并完成赋值
 	var loginResMes message.LoginResMes
 
-	//如果用户id=100 密码=123456 认为合法，否则不合法
-	if loginMes.UserId == 100 && loginMes.UserPwd == "123456" {
+	//需要到redis去验证用户
+	user,err := model.MyUserDao.Login(loginMes.UserId,loginMes.UserPwd)
+	if err != nil {
+		if err == model.ERROR_USER_NOTEXISTS {
+			loginResMes.Code = 500
+			loginResMes.Error = err.Error()
+		}else if err == model.ERROR_USER_PWD {
+			loginResMes.Code = 403
+			loginResMes.Error = err.Error()
+		}else {
+			loginResMes.Code = 505
+			loginResMes.Error = "服务器内部错误...."
+		}
+
+	} else {
 		loginResMes.Code = 200
-	}else{
-		loginResMes.Code = 500 //500表示该用户不存在
-		loginResMes.Error = "该用户不存在,请注册再使用..."
+		fmt.Println(user.UserName,"登录成功")
 	}
+
+	//如果用户id=100 密码=123456 认为合法，否则不合法
+	//if loginMes.UserId == 100 && loginMes.UserPwd == "123456" {
+	//	loginResMes.Code = 200
+	//}else{
+	//	loginResMes.Code = 500 //500表示该用户不存在
+	//	loginResMes.Error = "该用户不存在,请注册再使用..."
+	//}
 
 	//3、将loginResMes序列化
 	data , err := json.Marshal(loginResMes)

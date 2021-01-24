@@ -1,11 +1,18 @@
 package main
 
 import (
+	"chatroom/server/model"
 	"fmt"
 	"net"
+	"time"
 )
 
 func main() {
+
+	//1、服务器启动时,初始化redis的连接池
+	initPool("localhost:6379",16,0,300 * time.Second)
+	//2、初始化userDao
+	initUserDao()
 
 	//提示信息
 	fmt.Println("服务器【新的结构】在8889端口开始监听......")
@@ -43,6 +50,12 @@ func process(conn net.Conn) {
 		return
 	}
 
+}
+
+//写一个函数完成对UserDao的初始化任务
+func initUserDao()  {
+	//这里的pool本身就是一个全局的变量
+	model.MyUserDao = model.NewUserDao(pool)
 }
 
 //专门处理登录请求
@@ -126,7 +139,6 @@ func process(conn net.Conn) {
 //
 //	return
 //}
-
 
 //func readPkg(conn net.Conn) (mes message.Message, err error) {
 //	buf := make([]byte, 4096)
