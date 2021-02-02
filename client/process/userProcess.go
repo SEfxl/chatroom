@@ -168,6 +168,12 @@ func (this *UserProcess) Login(userId int, userPwd string) (err error) {
 	if loginResMes.Code == 200 {
 		//fmt.Println("登录成功")
 
+		//初始化curUser
+		curUser.Conn = conn
+		curUser.UserId = userId
+		curUser.UserStatus = message.UserOnline
+
+
 		//显示当前在线用户列表,遍历loginResMes.UsersId
 		fmt.Println("当前在线用户列表如下")
 		for _, v := range loginResMes.UsersId {
@@ -187,7 +193,6 @@ func (this *UserProcess) Login(userId int, userPwd string) (err error) {
 			onlineUsers[v] = user
 
 		}
-		fmt.Println()
 		fmt.Println()
 
 		//这里需要在客户端启动一个协程，该协程保持和服务器端的通讯,
